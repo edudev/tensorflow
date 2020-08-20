@@ -24,6 +24,7 @@ limitations under the License.
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/framework/log_memory.h"
 #include "tensorflow/core/framework/tracking_allocator.h"
+#include "tensorflow/core/framework/storage_allocator.h"
 #include "tensorflow/core/lib/strings/strcat.h"
 #include "tensorflow/core/platform/logging.h"
 #include "tensorflow/core/platform/mutex.h"
@@ -114,6 +115,19 @@ Allocator* ProcessState::GetCPUAllocator(int numa_node) {
       // at the cost of performance.
       allocator = new TrackingAllocator(allocator, true);
     }
+
+    bool enable_storage_allocator;
+    status = ReadBoolFromEnvVar(
+            "TF_ENABLE_STORAGE_ALLOCATOR", false, &enable_storage_allocator);
+    if (!status.ok()) {
+        LOG(ERROR) << "GetCPUAllocator: " << status.error_message();
+    }
+
+    if (enable_storage_allocator) {
+        allocator = new pavo::StorageAllocator(allocator);
+        LOG(INFO) << "tensorflow::pavo: enabling storage allocator";
+    }
+
     cpu_allocators_.push_back(allocator);
     if (!sub_allocator) {
       DCHECK(cpu_alloc_visitors_.empty() && cpu_free_visitors_.empty());

@@ -504,6 +504,7 @@ tf_cuda_library(
         "//tensorflow/core/framework:tensor_util.h",
         "//tensorflow/core/framework:thread_factory.h",
         "//tensorflow/core/framework:tracking_allocator.h",
+        "//tensorflow/core/framework:storage_allocator.h",
         "//tensorflow/core/framework:type_index.h",
         "//tensorflow/core/framework:type_traits.h",
         "//tensorflow/core/framework:typed_allocator.h",
