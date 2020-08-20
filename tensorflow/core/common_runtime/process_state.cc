@@ -61,6 +61,19 @@ ProcessState::MemDesc ProcessState::PtrType(const void* ptr) {
 }
 
 Allocator* ProcessState::GetCPUAllocator(int numa_node) {
+  bool enable_storage_allocator;
+  Status status = ReadBoolFromEnvVar(
+      "TF_ENABLE_STORAGE_ALLOCATOR", false, &enable_storage_allocator);
+  if (!status.ok()) {
+    LOG(ERROR) << "GetCPUAllocator: " << status.error_message();
+  }
+
+  if (enable_storage_allocator) {
+    Allocator *allocator = new pavo::StorageAllocator();
+    LOG(INFO) << "tensorflow::pavo: enabling storage allocator";
+    return allocator;
+  }
+
   if (!numa_enabled_ || numa_node == port::kNUMANoAffinity) numa_node = 0;
   mutex_lock lock(mu_);
   while (cpu_allocators_.size() <= static_cast<size_t>(numa_node)) {
@@ -124,7 +137,7 @@ Allocator* ProcessState::GetCPUAllocator(int numa_node) {
     }
 
     if (enable_storage_allocator) {
-        allocator = new pavo::StorageAllocator(allocator);
+        allocator = new pavo::StorageAllocator();
         LOG(INFO) << "tensorflow::pavo: enabling storage allocator";
     }
 

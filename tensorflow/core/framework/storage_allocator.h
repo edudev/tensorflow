@@ -21,7 +21,7 @@ namespace pavo {
 
 class StorageAllocator : public Allocator {
  public:
-  explicit StorageAllocator(Allocator *allocator);
+  explicit StorageAllocator();
   ~StorageAllocator() override;
 
   string Name() override { return "storage"; }
@@ -30,18 +30,8 @@ class StorageAllocator : public Allocator {
   void* AllocateRaw(size_t alignment, size_t num_bytes,
                               const AllocationAttributes& allocation_attr) override;
     void DeallocateRaw(void* ptr) override;
-    bool TracksAllocationSizes() const override;
     bool AllocatesOpaqueHandle() const override;
-    size_t RequestedSize(const void* ptr) const override;
-    size_t AllocatedSize(const void* ptr) const override;
-    int64 AllocationId(const void* ptr) const override;
-    size_t AllocatedSizeSlow(const void* ptr) const override;
-    absl::optional<AllocatorStats> GetStats() override;
-    void ClearStats() override;
-    void SetSafeFrontier(uint64 count) override;
 private:
-  Allocator *allocator_;
-
   TF_DISALLOW_COPY_AND_ASSIGN(StorageAllocator);
 };
 

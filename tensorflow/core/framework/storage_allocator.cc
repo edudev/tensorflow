@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <cstdlib>
+
 #include "tensorflow/core/framework/allocator.h"
 #include "tensorflow/core/framework/storage_allocator.h"
 
@@ -20,62 +22,40 @@ namespace tensorflow {
 
 namespace pavo {
 
-StorageAllocator::StorageAllocator(Allocator *allocator) :
+StorageAllocator::StorageAllocator() {
+}
 
-    allocator_(allocator) {}
+StorageAllocator::~StorageAllocator() {
+}
 
-StorageAllocator::~StorageAllocator() {}
+static void *AllocateRawLocal(size_t alignment, size_t num_bytes) {
+  assert((alignment % sizeof(void *)) == 0);
+  assert((alignment & (alignment - 1)) == 0);
+
+  void *result;
+  int code = posix_memalign(&result, alignment, num_bytes);
+  return result;
+};
 
 void *StorageAllocator::AllocateRaw(size_t alignment, size_t num_bytes) {
   LOG(INFO) << "tensorflow::pavo: AllocateRaw no attr " << alignment << " " << num_bytes;
-  return this->allocator_->AllocateRaw(alignment, num_bytes);
+
+  return AllocateRawLocal(alignment, num_bytes);
 }
 
 void *StorageAllocator::AllocateRaw(size_t alignment, size_t num_bytes,
                                     const AllocationAttributes &allocation_attr) {
   LOG(INFO) << "tensorflow::pavo: AllocateRaw wt attr " << alignment << " " << num_bytes;
-  return this->allocator_->AllocateRaw(alignment, num_bytes, allocation_attr);
+  return AllocateRawLocal(alignment, num_bytes);
 }
 
 void StorageAllocator::DeallocateRaw(void *ptr) {
   LOG(INFO) << "tensorflow::pavo: DeallocateRaw";
-  this->allocator_->DeallocateRaw(ptr);
-}
-
-bool StorageAllocator::TracksAllocationSizes() const {
-  return this->allocator_->TracksAllocationSizes();
+  free(ptr);
 }
 
 bool StorageAllocator::AllocatesOpaqueHandle() const {
-  return this->allocator_->AllocatesOpaqueHandle();
-}
-
-size_t StorageAllocator::RequestedSize(const void *ptr) const {
-  return this->allocator_->RequestedSize(ptr);
-}
-
-size_t StorageAllocator::AllocatedSize(const void *ptr) const {
-  return this->allocator_->AllocatedSize(ptr);
-}
-
-int64 StorageAllocator::AllocationId(const void *ptr) const {
-  return this->allocator_->AllocationId(ptr);
-}
-
-size_t StorageAllocator::AllocatedSizeSlow(const void *ptr) const {
-  return this->allocator_->AllocatedSizeSlow(ptr);
-}
-
-absl::optional<AllocatorStats> StorageAllocator::GetStats() {
-  return this->allocator_->GetStats();
-}
-
-void StorageAllocator::ClearStats() {
-  this->allocator_->ClearStats();
-}
-
-void StorageAllocator::SetSafeFrontier(uint64 count) {
-  this->allocator_->SetSafeFrontier(count);
+  return false;
 }
 
 } //  namespace pavo
