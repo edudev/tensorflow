@@ -15,6 +15,9 @@ limitations under the License.
 
 #include "tensorflow/core/framework/allocator.h"
 
+#include <map>
+#include <mutex>
+
 namespace tensorflow {
 
 namespace pavo {
@@ -33,6 +36,11 @@ class StorageAllocator : public Allocator {
     bool AllocatesOpaqueHandle() const override;
 private:
   TF_DISALLOW_COPY_AND_ASSIGN(StorageAllocator);
+  std::map<const void *, size_t> memory_map_;
+  std::mutex memory_map_guard_;
+  size_t next_block_index_;
+
+  size_t GetNextBlockIndex();
 };
 
 }  // namespace
